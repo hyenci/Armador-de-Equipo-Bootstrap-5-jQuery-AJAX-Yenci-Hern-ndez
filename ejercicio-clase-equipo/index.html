@@ -207,7 +207,7 @@
     // "btn-ver-detalle" y el atributo data-id="<id del personaje>" —
     // ese botón es el que vas a usar en el TODO 2 para abrir el modal.
     // ==================================================================
-    $('#btn-agregar').on('click', function () {
+$('#btn-agregar').on('click', function () {
   const $checkboxesSeleccionados = $('#catalogo-lista input:checked');
 
   if ($checkboxesSeleccionados.length === 0) {
@@ -216,13 +216,20 @@
   }
 
   $('#catalogo-aviso').text('');
+  let duplicadosEvitados = 0;
 
   $checkboxesSeleccionados.each(function () {
     const idPersonaje = $(this).val();
+    
+    if (equipoActual.has(parseInt(idPersonaje))) {
+      duplicadosEvitados++;
+      return;
+    }
+
     const personaje = catalogoPorId[idPersonaje];
 
     const $card = $(`
-      <div class="col">
+      <div class="col" data-personaje-id="${personaje.id}">
         <div class="card h-100">
           <img src="${personaje.image}" class="card-img-top" alt="${personaje.name}">
           <div class="card-body">
@@ -233,16 +240,40 @@
             <button class="btn btn-primary btn-sm btn-ver-detalle" data-id="${personaje.id}">
               Ver detalle
             </button>
+            <button class="btn btn-danger btn-sm btn-quitar ms-1" data-id="${personaje.id}">
+              ✕
+            </button>
           </div>
         </div>
       </div>
     `);
 
     $('#mi-equipo').append($card);
+    equipoActual.add(parseInt(idPersonaje));
   });
 
+  if (duplicadosEvitados > 0) {
+    $('#catalogo-aviso').text(`${duplicadosEvitados} personaje(s) ya estaban en tu equipo`).fadeIn();
+  }
+
   $('#equipo-vacio').hide();
-}); 
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // ==================================================================
     // TODO 2 (obligatorio) — Abrir el modal de detalle.
@@ -267,6 +298,21 @@
     // Bootstrap 5:
     //
     //   new bootstrap.Modal(document.getElementById('modalDetalle')).show();
+
+$('#mi-equipo').on('click', '.btn-ver-detalle', function () {
+  const idPersonaje = $(this).data('id');
+  const personaje = catalogoPorId[idPersonaje];
+
+  $('#modalDetalleTitulo').text(personaje.name);
+  $('#modalDetalle-imagen').attr('src', personaje.image).attr('alt', personaje.name);
+  $('#modalDetalle-estado').text(personaje.status);
+  $('#modalDetalle-especie').text(personaje.species);
+  $('#modalDetalle-origen').text(personaje.origin.name);
+  $('#modalDetalle-ubicacion').text(personaje.location.name);
+
+  new bootstrap.Modal(document.getElementById('modalDetalle')).show();
+});
+
     // ==================================================================
 
     // ==================================================================
@@ -280,6 +326,16 @@
     // Agregá también un botón "Quitar" en cada card (delegado igual que
     // en el TODO 2) que la elimine del DOM y del Set, y vuelva a mostrar
     // #equipo-vacio si el equipo queda en cero personajes.
+$('#mi-equipo').on('click', '.btn-quitar', function () {
+  const idPersonaje = $(this).data('id');
+  
+  equipoActual.delete(idPersonaje);
+  $(this).closest('[data-personaje-id]').remove();
+  
+  if ($('#mi-equipo .col').length === 0) {
+    $('#equipo-vacio').show();
+  }
+});
     // ==================================================================
 
     // ==================================================================
@@ -292,7 +348,15 @@
     // respuesta en el modal. Esto practica encadenar dos llamadas AJAX
     // (la segunda depende del resultado de la primera).
     // ==================================================================
+
+
+
   </script>
+
+
+
+
+
 
   <!--
     Puntos para discutir en clase al cerrar el ejercicio:
